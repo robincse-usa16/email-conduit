@@ -14,7 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      emails: {
+        Row: {
+          body_html: string | null
+          body_preview: string | null
+          body_text: string | null
+          created_at: string
+          gmail_account_id: string
+          gmail_message_id: string
+          id: string
+          is_important: boolean | null
+          is_read: boolean | null
+          is_starred: boolean | null
+          labels: string[] | null
+          received_at: string | null
+          recipient: string | null
+          sender: string | null
+          subject: string | null
+          thread_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_preview?: string | null
+          body_text?: string | null
+          created_at?: string
+          gmail_account_id: string
+          gmail_message_id: string
+          id?: string
+          is_important?: boolean | null
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          labels?: string[] | null
+          received_at?: string | null
+          recipient?: string | null
+          sender?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string | null
+          body_preview?: string | null
+          body_text?: string | null
+          created_at?: string
+          gmail_account_id?: string
+          gmail_message_id?: string
+          id?: string
+          is_important?: boolean | null
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          labels?: string[] | null
+          received_at?: string | null
+          recipient?: string | null
+          sender?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "gmail_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmail_accounts: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          display_name: string | null
+          email_address: string
+          id: string
+          is_active: boolean | null
+          last_sync: string | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          display_name?: string | null
+          email_address: string
+          id?: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
