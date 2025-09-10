@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,108 +16,126 @@ import {
   AlertCircle,
   RefreshCw
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useGmailAccounts } from "@/hooks/useGmailAccounts";
 import AnimatedCard from "@/components/AnimatedCard";
+import EmailViewer from "@/components/EmailViewer";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import dashboardImage from "@/assets/dashboard-preview.jpg";
 
 const Dashboard = () => {
-  const [accounts] = useState([
-    {
-      id: 1,
-      email: "john.doe@gmail.com",
-      status: "active",
-      unread: 15,
-      sent: 45,
-      drafts: 3,
-      lastSync: "2 minutes ago"
-    },
-    {
-      id: 2,
-      email: "jane.smith@gmail.com", 
-      status: "active",
-      unread: 8,
-      sent: 23,
-      drafts: 1,
-      lastSync: "5 minutes ago"
-    },
-    {
-      id: 3,
-      email: "business@company.com",
-      status: "syncing",
-      unread: 32,
-      sent: 78,
-      drafts: 7,
-      lastSync: "Syncing..."
-    },
-    {
-      id: 4,
-      email: "support@startup.com",
-      status: "error",
-      unread: 0,
-      sent: 12,
-      drafts: 0,
-      lastSync: "Failed"
+  const { user } = useAuth();
+  const { 
+    accounts, 
+    emails, 
+    loading, 
+    syncing, 
+    addGmailAccount, 
+    syncAccount, 
+    fetchEmails 
+  } = useGmailAccounts();
+  
+  const [selectedEmail, setSelectedEmail] = useState<any>(null);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedAccount) {
+      fetchEmails(selectedAccount);
     }
-  ]);
+  }, [selectedAccount]);
 
   const stats = [
-    { title: "Total Accounts", value: "4", icon: Users, color: "text-primary" },
-    { title: "Unread Emails", value: "55", icon: Mail, color: "text-accent" },
-    { title: "Sent Today", value: "158", icon: Send, color: "text-success" },
-    { title: "Drafts", value: "11", icon: Archive, color: "text-warning" }
+    { title: "Total Accounts", value: accounts.length.toString(), icon: Users, color: "text-primary" },
+    { title: "Unread Emails", value: emails.filter(e => !e.is_read).length.toString(), icon: Mail, color: "text-accent" },
+    { title: "Total Emails", value: emails.length.toString(), icon: Send, color: "text-success" },
+    { title: "Starred", value: emails.filter(e => e.is_starred).length.toString(), icon: Archive, color: "text-warning" }
   ];
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          Active
-        </Badge>;
-      case "syncing":
-        return <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
-          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-          Syncing
-        </Badge>;
-      case "error":
-        return <Badge variant="destructive">
-          <AlertCircle className="h-3 w-3 mr-1" />
-          Error
-        </Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+  const getStatusBadge = (account: any) => {
+    const isRecent = new Date(account.last_sync) > new Date(Date.now() - 5 * 60 * 1000); // 5 minutes
+    
+    if (account.is_active && isRecent) {
+      return <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Active
+      </Badge>;
+    } else if (account.is_active) {
+      return <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
+        <Clock className="h-3 w-3 mr-1" />
+        Idle
+      </Badge>;
+    } else {
+      return <Badge variant="destructive">
+        <AlertCircle className="h-3 w-3 mr-1" />
+        Inactive
+      </Badge>;
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background pt-16">
-      {/* Header */}
-      <section className="py-8 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                Gmail{" "}
-                <span className="gradient-hero bg-clip-text text-transparent">
-                  Dashboard
-                </span>
-              </h1>
-              <p className="text-muted-foreground">
-                Manage all your Gmail accounts from one powerful interface
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              <Button variant="email" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Account
-              </Button>
-            </div>
-          </div>
+  const getAccountStats = (accountId: string) => {
+    const accountEmails = emails.filter(e => e.gmail_account_id === accountId);
+    return {
+      unread: accountEmails.filter(e => !e.is_read).length,
+      total: accountEmails.length,
+      starred: accountEmails.filter(e => e.is_starred).length
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center space-x-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="text-lg">Loading dashboard...</span>
         </div>
-      </section>
+      </div>
+    );
+  }
+
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background pt-16">
+        {selectedEmail ? (
+          <div className="container mx-auto px-4 py-8">
+            <EmailViewer 
+              email={selectedEmail} 
+              onBack={() => setSelectedEmail(null)} 
+            />
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <section className="py-8 border-b border-border">
+              <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">
+                      Gmail{" "}
+                      <span className="gradient-hero bg-clip-text text-transparent">
+                        Dashboard
+                      </span>
+                    </h1>
+                    <p className="text-muted-foreground">
+                      Welcome back, {user?.email}! Manage all your Gmail accounts from one interface.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" size="sm">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Button>
+                    <Button 
+                      variant="email" 
+                      size="sm"
+                      onClick={addGmailAccount}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Account
+                    </Button>
+                  </div>
+                </div>
+              </div>  
+            </section>
 
       {/* Stats Cards */}
       <section className="py-8">
@@ -148,54 +166,130 @@ const Dashboard = () => {
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold">Connected Accounts</h2>
-                <Button variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Sync All
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={syncing}
+                  onClick={() => accounts.forEach(acc => syncAccount(acc.id))}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? 'Syncing...' : 'Sync All'}
                 </Button>
               </div>
               
-              <div className="space-y-4">
-                {accounts.map((account, index) => (
-                  <AnimatedCard key={account.id} delay={index * 100}>
-                    <div className="flex items-center justify-between p-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 rounded-full gradient-primary">
-                          <Mail className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">{account.email}</h3>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>Last sync: {account.lastSync}</span>
+              {accounts.length === 0 ? (
+                <AnimatedCard>
+                  <div className="text-center p-12">
+                    <Mail className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Gmail Accounts Connected</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Connect your first Gmail account to start managing your emails
+                    </p>
+                    <Button variant="email" onClick={addGmailAccount}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Gmail Account
+                    </Button>
+                  </div>
+                </AnimatedCard>
+              ) : (
+                <div className="space-y-4">
+                  {accounts.map((account, index) => {
+                    const stats = getAccountStats(account.id);
+                    return (
+                      <AnimatedCard key={account.id} delay={index * 100}>
+                        <div className="flex items-center justify-between p-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-2 rounded-full gradient-primary">
+                              <Mail className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg">{account.email_address}</h3>
+                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>Last sync: {new Date(account.last_sync).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-4">
+                            {getStatusBadge(account)}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedAccount(account.id);
+                                fetchEmails(account.id);
+                              }}
+                            >
+                              View Emails
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              disabled={syncing}
+                              onClick={() => syncAccount(account.id)}
+                            >
+                              {syncing ? 'Syncing...' : 'Sync'}
+                            </Button>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        {getStatusBadge(account.status)}
-                        <Button variant="outline" size="sm">
-                          Manage
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4 px-6 pb-6 pt-2 border-t border-border">
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-accent">{account.unread}</div>
-                        <div className="text-xs text-muted-foreground">Unread</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-success">{account.sent}</div>
-                        <div className="text-xs text-muted-foreground">Sent</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-warning">{account.drafts}</div>
-                        <div className="text-xs text-muted-foreground">Drafts</div>
-                      </div>
-                    </div>
-                  </AnimatedCard>
-                ))}
-              </div>
+                        
+                        <div className="grid grid-cols-3 gap-4 px-6 pb-6 pt-2 border-t border-border">
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-accent">{stats.unread}</div>
+                            <div className="text-xs text-muted-foreground">Unread</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-success">{stats.total}</div>
+                            <div className="text-xs text-muted-foreground">Total</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-warning">{stats.starred}</div>
+                            <div className="text-xs text-muted-foreground">Starred</div>
+                          </div>
+                        </div>
+                      </AnimatedCard>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Emails List */}
+              {selectedAccount && emails.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold">Recent Emails</h3>
+                  <div className="space-y-2">
+                    {emails.slice(0, 10).map((email, index) => (
+                      <AnimatedCard key={email.id} delay={index * 50}>
+                        <div 
+                          className="p-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                          onClick={() => setSelectedEmail(email)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className={`font-medium ${!email.is_read ? 'font-bold' : ''}`}>
+                                  {email.sender.split('<')[0].trim()}
+                                </span>
+                                {email.is_starred && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
+                              </div>
+                              <h4 className={`text-sm mb-1 ${!email.is_read ? 'font-semibold' : ''}`}>
+                                {email.subject}
+                              </h4>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {email.body_preview}
+                              </p>
+                            </div>
+                            <div className="text-xs text-muted-foreground ml-4">
+                              {new Date(email.received_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </AnimatedCard>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -249,9 +343,11 @@ const Dashboard = () => {
               </AnimatedCard>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </>
+    )}
+  </div>
+</ProtectedRoute>
   );
 };
 
