@@ -14,7 +14,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Star
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGmailAccounts } from "@/hooks/useGmailAccounts";
@@ -343,7 +344,8 @@ const Dashboard = () => {
               </AnimatedCard>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
       </>
     )}
   </div>

@@ -20,6 +20,14 @@ interface Email {
   is_read: boolean;
   is_starred: boolean;
   received_at: string;
+  gmail_account_id: string;
+  body_html?: string;
+  body_text?: string;
+  recipient?: string;
+  is_important?: boolean;
+  labels?: string[];
+  thread_id?: string;
+  gmail_message_id: string;
 }
 
 export const useGmailAccounts = () => {
