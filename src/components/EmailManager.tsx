@@ -35,7 +35,12 @@ import EmailViewer from "@/components/EmailViewer";
 import EmailComposer from "@/components/EmailComposer";
 import AnimatedCard from "@/components/AnimatedCard";
 
-const EmailManager = () => {
+interface EmailManagerProps {
+  selectedAccountId?: string | null;
+  onBack?: () => void;
+}
+
+const EmailManager = ({ selectedAccountId, onBack }: EmailManagerProps = {}) => {
   // Gmail email management interface
   const { 
     accounts, 
@@ -47,7 +52,7 @@ const EmailManager = () => {
   } = useGmailAccounts();
   
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
-  const [selectedAccount, setSelectedAccount] = useState<string>("all");
+  const [selectedAccount, setSelectedAccount] = useState<string>(selectedAccountId || "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [showComposer, setShowComposer] = useState(false);
@@ -151,6 +156,12 @@ const EmailManager = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
+              {onBack && (
+                <Button variant="outline" size="sm" onClick={onBack}>
+                  <Inbox className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 size="sm"

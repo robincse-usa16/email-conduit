@@ -103,7 +103,13 @@ const Dashboard = () => {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-background pt-16">
-          <EmailManager />
+          <EmailManager 
+            selectedAccountId={selectedAccount} 
+            onBack={() => {
+              setShowEmailManager(false);
+              setSelectedAccount(null);
+            }}
+          />
         </div>
       </ProtectedRoute>
     );
@@ -178,195 +184,102 @@ const Dashboard = () => {
       {/* Main Content */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Accounts List */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">Connected Accounts</h2>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  disabled={syncing}
-                  onClick={() => accounts.forEach(acc => syncAccount(acc.id))}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                  {syncing ? 'Syncing...' : 'Sync All'}
-                </Button>
-              </div>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-semibold">Connected Accounts</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={syncing}
+                onClick={() => accounts.forEach(acc => syncAccount(acc.id))}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync All'}
+              </Button>
+            </div>
               
-              {accounts.length === 0 ? (
-                <AnimatedCard>
-                  <div className="text-center p-12">
-                    <Mail className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Gmail Accounts Connected</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Connect your first Gmail account to start managing your emails
-                    </p>
-                    <Button variant="email" onClick={addGmailAccount}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Gmail Account
-                    </Button>
-                  </div>
-                </AnimatedCard>
-              ) : (
-                <div className="space-y-4">
-                  {accounts.map((account, index) => {
-                    const stats = getAccountStats(account.id);
-                    return (
-                      <AnimatedCard key={account.id} delay={index * 100}>
-                        <div className="flex items-center justify-between p-6">
-                          <div className="flex items-center space-x-4">
-                            <div className="p-2 rounded-full gradient-primary">
-                              <Mail className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-lg">{account.email_address}</h3>
-                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                <span>Last sync: {new Date(account.last_sync).toLocaleString()}</span>
-                              </div>
-                            </div>
+            {accounts.length === 0 ? (
+              <AnimatedCard>
+                <div className="text-center p-12">
+                  <Mail className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Gmail Accounts Connected</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Connect your first Gmail account to start managing your emails
+                  </p>
+                  <Button variant="email" onClick={addGmailAccount}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Gmail Account
+                  </Button>
+                </div>
+              </AnimatedCard>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {accounts.map((account, index) => {
+                  const stats = getAccountStats(account.id);
+                  return (
+                    <AnimatedCard key={account.id} delay={index * 100}>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 rounded-full gradient-primary">
+                            <Mail className="h-6 w-6 text-white" />
                           </div>
-                          
-                          <div className="flex items-center space-x-4">
-                            {getStatusBadge(account)}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedAccount(account.id);
-                                fetchEmails(account.id);
-                              }}
-                            >
-                              View Emails
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              disabled={syncing}
-                              onClick={() => syncAccount(account.id)}
-                            >
-                              {syncing ? 'Syncing...' : 'Sync'}
-                            </Button>
+                          {getStatusBadge(account)}
+                        </div>
+                        
+                        <div className="mb-4">
+                          <h3 className="font-semibold text-lg mb-2 truncate">{account.email_address}</h3>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>Last sync: {new Date(account.last_sync).toLocaleDateString()}</span>
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-3 gap-4 px-6 pb-6 pt-2 border-t border-border">
+                        <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
                           <div className="text-center">
-                            <div className="text-xl font-bold text-accent">{stats.unread}</div>
+                            <div className="text-2xl font-bold text-accent">{stats.unread}</div>
                             <div className="text-xs text-muted-foreground">Unread</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-xl font-bold text-success">{stats.total}</div>
+                            <div className="text-2xl font-bold text-success">{stats.total}</div>
                             <div className="text-xs text-muted-foreground">Total</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-xl font-bold text-warning">{stats.starred}</div>
+                            <div className="text-2xl font-bold text-warning">{stats.starred}</div>
                             <div className="text-xs text-muted-foreground">Starred</div>
                           </div>
                         </div>
-                      </AnimatedCard>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Emails List */}
-              {selectedAccount && emails.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Recent Emails</h3>
-                  <div className="space-y-2">
-                    {emails.slice(0, 10).map((email, index) => (
-                      <AnimatedCard key={email.id} delay={index * 50}>
-                        <div 
-                          className="p-4 cursor-pointer hover:bg-muted/20 transition-colors"
-                          onClick={() => setSelectedEmail(email)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className={`font-medium ${!email.is_read ? 'font-bold' : ''}`}>
-                                  {email.sender.split('<')[0].trim()}
-                                </span>
-                                {email.is_starred && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
-                              </div>
-                              <h4 className={`text-sm mb-1 ${!email.is_read ? 'font-semibold' : ''}`}>
-                                {email.subject}
-                              </h4>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {email.body_preview}
-                              </p>
-                            </div>
-                            <div className="text-xs text-muted-foreground ml-4">
-                              {new Date(email.received_at).toLocaleDateString()}
-                            </div>
-                          </div>
+                        
+                        <div className="space-y-2">
+                          <Button 
+                            variant="email" 
+                            size="sm" 
+                            className="w-full"
+                            onClick={() => {
+                              setSelectedAccount(account.id);
+                              setShowEmailManager(true);
+                            }}
+                          >
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            Manage
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            disabled={syncing}
+                            onClick={() => syncAccount(account.id)}
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                            {syncing ? 'Syncing...' : 'Sync Now'}
+                          </Button>
                         </div>
-                      </AnimatedCard>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                      </div>
+                    </AnimatedCard>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <AnimatedCard delay={400}>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    <span>Quick Actions</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    variant="email" 
-                    className="w-full justify-start"
-                    onClick={() => setShowEmailManager(true)}
-                  >
-                    <UserCheck className="h-4 w-4 mr-2" />
-                    Manage Emails
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => setShowEmailManager(true)}
-                  >
-                    <PenTool className="h-4 w-4 mr-2" />
-                    Compose Email
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Analytics
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Security Settings
-                  </Button>
-                </CardContent>
-              </AnimatedCard>
-
-              {/* Dashboard Preview */}
-              <AnimatedCard delay={500}>
-                <CardHeader>
-                  <CardTitle>Dashboard Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <img 
-                    src={dashboardImage} 
-                    alt="Dashboard Preview" 
-                    className="rounded-lg w-full h-auto mb-4"
-                  />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Get insights into your email patterns and productivity metrics
-                  </p>
-                  <Button variant="email" size="sm" className="w-full">
-                    View Analytics
-                  </Button>
-                </CardContent>
-              </AnimatedCard>
-            </div>
           </div>
         </div>
       </section>
