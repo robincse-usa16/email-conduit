@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         hero: "gradient-hero text-white hover:shadow-floating hover:scale-105 border-0 font-semibold",
-        email: "gradient-primary text-white hover:shadow-email hover:-translate-y-1 border-0",
+        email: "gradient-primary text-white shadow-email hover:shadow-floating transition-smooth hover:scale-105",
         success: "bg-success text-success-foreground hover:bg-success/90 shadow-sm",
         gmail: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-email",
       },

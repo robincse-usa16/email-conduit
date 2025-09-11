@@ -1,9 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Mail, Home, Info, MessageCircle, LayoutDashboard, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import UserProfile from "@/components/UserProfile";
 
 const Navbar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const navItems = [
     { name: "Home", path: "/", icon: Home },
@@ -46,13 +49,17 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Login Button */}
-          <Button variant="email" size="sm" asChild>
-            <Link to="/login" className="flex items-center space-x-1">
-              <LogIn className="h-4 w-4" />
-              <span>Login</span>
-            </Link>
-          </Button>
+          {/* User Profile or Login Button */}
+          {user ? (
+            <UserProfile />
+          ) : (
+            <Button variant="email" size="sm" asChild>
+              <Link to="/login" className="flex items-center space-x-1">
+                <LogIn className="h-4 w-4" />
+                <span>Login</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </nav>

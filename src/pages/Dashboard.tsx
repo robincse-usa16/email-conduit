@@ -15,12 +15,17 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  Star
+  Star,
+  UserCheck,
+  PenTool,
+  TrendingUp,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGmailAccounts } from "@/hooks/useGmailAccounts";
 import AnimatedCard from "@/components/AnimatedCard";
 import EmailViewer from "@/components/EmailViewer";
+import EmailManager from "@/components/EmailManager";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import dashboardImage from "@/assets/dashboard-preview.jpg";
 
@@ -38,6 +43,7 @@ const Dashboard = () => {
   
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [showEmailManager, setShowEmailManager] = useState(false);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -90,6 +96,16 @@ const Dashboard = () => {
           <span className="text-lg">Loading dashboard...</span>
         </div>
       </div>
+    );
+  }
+
+  if (showEmailManager) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-background pt-16">
+          <EmailManager />
+        </div>
+      </ProtectedRoute>
     );
   }
 
@@ -304,21 +320,29 @@ const Dashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Inbox className="h-4 w-4 mr-2" />
-                    Unified Inbox
+                  <Button 
+                    variant="email" 
+                    className="w-full justify-start"
+                    onClick={() => setShowEmailManager(true)}
+                  >
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Manage Emails
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Send className="h-4 w-4 mr-2" />
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => setShowEmailManager(true)}
+                  >
+                    <PenTool className="h-4 w-4 mr-2" />
                     Compose Email
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <Archive className="h-4 w-4 mr-2" />
-                    Bulk Operations
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Analytics
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Account Settings
+                    <Shield className="h-4 w-4 mr-2" />
+                    Security Settings
                   </Button>
                 </CardContent>
               </AnimatedCard>
