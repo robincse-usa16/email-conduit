@@ -29,12 +29,14 @@ import {
   PenTool,
   RefreshCw
 } from "lucide-react";
+// Force rebuild to clear Vite cache
 import { useGmailAccounts } from "@/hooks/useGmailAccounts";
 import EmailViewer from "@/components/EmailViewer";
 import EmailComposer from "@/components/EmailComposer";
 import AnimatedCard from "@/components/AnimatedCard";
 
 const EmailManager = () => {
+  // Gmail email management interface
   const { 
     accounts, 
     emails, 
