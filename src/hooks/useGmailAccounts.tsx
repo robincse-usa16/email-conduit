@@ -111,12 +111,36 @@ export const useGmailAccounts = () => {
       // Open OAuth popup
       const popup = window.open(authUrl, 'gmail-oauth', 'width=500,height=600');
       
-      // Listen for OAuth completion
+      // Listen for messages from popup
+      const messageListener = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data.success) {
+          toast({
+            title: "Success",
+            description: `Connected Gmail account: ${event.data.email}`,
+          });
+          // Refresh accounts after successful OAuth
+          fetchAccounts();
+          fetchEmails();
+        } else if (event.data.error) {
+          toast({
+            title: "Error",
+            description: event.data.error,
+            variant: "destructive"
+          });
+        }
+        
+        window.removeEventListener('message', messageListener);
+      };
+      
+      window.addEventListener('message', messageListener);
+      
+      // Also check if popup was closed manually
       const checkClosed = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkClosed);
-          // Refresh accounts after OAuth
-          setTimeout(() => fetchAccounts(), 1000);
+          window.removeEventListener('message', messageListener);
         }
       }, 1000);
 
