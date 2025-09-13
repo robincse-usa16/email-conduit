@@ -97,7 +97,8 @@ export const useGmailAccounts = () => {
 
     try {
       // Get OAuth URL
-      const response = await supabase.functions.invoke('gmail-oauth/auth-url', {
+      const response = await supabase.functions.invoke('gmail-oauth', {
+        body: { action: 'auth-url' },
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }

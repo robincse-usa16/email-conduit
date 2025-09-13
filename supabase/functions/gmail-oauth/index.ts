@@ -47,7 +47,10 @@ serve(async (req) => {
     const { method } = req;
     const url = new URL(req.url);
 
-    if (method === 'GET' && url.pathname.endsWith('/auth-url')) {
+    if (method === 'POST') {
+      const body = await req.json();
+      
+      if (body.action === 'auth-url') {
       // Generate OAuth URL
       const redirectUri = `${url.origin}/gmail-oauth/callback`;
       const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email';
@@ -61,14 +64,14 @@ serve(async (req) => {
         `prompt=consent&` +
         `state=${user.id}`;
 
-      return new Response(JSON.stringify({ authUrl }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (method === 'POST' && url.pathname.endsWith('/callback')) {
-      // Handle OAuth callback
-      const { code, state } = await req.json();
+        return new Response(JSON.stringify({ authUrl }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (body.action === 'callback') {
+        // Handle OAuth callback
+        const { code, state } = body;
       
       if (state !== user.id) {
         throw new Error('Invalid state parameter');
@@ -127,13 +130,14 @@ serve(async (req) => {
         throw new Error('Failed to save Gmail account');
       }
 
-      return new Response(JSON.stringify({ 
-        success: true, 
-        email: profile.email,
-        name: profile.name 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+        return new Response(JSON.stringify({ 
+          success: true, 
+          email: profile.email,
+          name: profile.name 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {

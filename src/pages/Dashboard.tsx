@@ -27,6 +27,7 @@ import AnimatedCard from "@/components/AnimatedCard";
 import EmailViewer from "@/components/EmailViewer";
 import EmailManager from "@/components/EmailManager";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AddAccountDialog from "@/components/AddAccountDialog";
 import dashboardImage from "@/assets/dashboard-preview.jpg";
 
 const Dashboard = () => {
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [showEmailManager, setShowEmailManager] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -150,7 +152,7 @@ const Dashboard = () => {
                     <Button 
                       variant="email" 
                       size="sm"
-                      onClick={addGmailAccount}
+                      onClick={() => setShowAddDialog(true)}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Account
@@ -206,7 +208,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground mb-6">
                     Connect your first Gmail account to start managing your emails
                   </p>
-                  <Button variant="email" onClick={addGmailAccount}>
+                  <Button variant="email" onClick={() => setShowAddDialog(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Gmail Account
                   </Button>
@@ -285,6 +287,11 @@ const Dashboard = () => {
       </section>
       </>
     )}
+    
+    <AddAccountDialog 
+      open={showAddDialog} 
+      onOpenChange={setShowAddDialog} 
+    />
   </div>
 </ProtectedRoute>
   );
